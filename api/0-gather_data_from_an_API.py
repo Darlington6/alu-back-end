@@ -1,31 +1,35 @@
 #!/usr/bin/python3
 """
-    python script that returns TODO list progress for a given employee ID
+getting data using api
 """
-import json
 import requests
-from sys import argv
-
+import sys
 
 if __name__ == "__main__":
-    """ Functions for gathering  data from an API """
-    request_employee = requests.get(
-        'https://jsonplaceholder.typicode.com/users/{}/'.format(argv[1]))
-    employee = json.loads(request_employee.text)
-    employee_name = employee.get("name")
-    request_todos = requests.get(
-        'https://jsonplaceholder.typicode.com/users/{}/todos'.format(argv[1]))
-    tasks = {}
-    employee_todos = json.loads(request_todos.text)
+    employee_Id = int(sys.argv[1])
 
-    for dictionary in employee_todos:
-        tasks.update({dictionary.get("title"): dictionary.get("completed")})
+    todo_url = "https://jsonplaceholder.typicode.com/todos"
+    user_data_url = "https://jsonplaceholder.typicode.com/users"
 
-    EMPLOYEE_NAME = employee_name
-    TOTAL_NUMBER_OF_TASKS = len(tasks)
-    NUMBER_OF_DONE_TASKS = len([k for k, v in tasks.items() if v is True])
-    print("Employee {} is done with tasks({}/{}):".format(
-        EMPLOYEE_NAME, NUMBER_OF_DONE_TASKS, TOTAL_NUMBER_OF_TASKS))
-    for k, v in tasks.items():
-        if v is True:
-            print("\t {}".format(k))
+    user_response = requests.get(user_data_url)
+    todo_response = requests.get(todo_url)
+    # if todo_response.status_code & user_response.status_code == 200:
+    todos = todo_response.json()
+    users = user_response.json()
+    for user in users:
+        if user.get("id") == employee_Id:
+            employee_name = user.get("name")
+    # filter completed tasks
+    done = []
+    total = 0
+    completed = 0
+    for todo in todos:
+        if todo.get("userId") == employee_Id:
+            total += 1
+            if todo.get("completed"):
+                completed += 1
+                done.append(todo.get("title"))
+    # Display the progress information
+    print(f"Employee {employee_name} is done with tasks({completed}/{total}):")
+    for _ in done:
+        print(f"\t {_}")
